@@ -1,5 +1,57 @@
 [build-system]
-requires = [
-    "setuptools"
-]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "sbppc"
+version = "0.0.1"
+description = "Small bodies polarimetric phase curve fitting tools"
+readme = "README.md"
+license = {text = "BSD-3-Clause"}
+authors = [
+    {name = "Yoonsoo P. Bach", email = "ysbach93@gmail.com"}
+]
+keywords = ["astronomy", "polarimetry"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Environment :: MacOS X",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Education",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "scipy",
+]
+
+[project.urls]
+Homepage = "https://github.com/ysBach/sbppc"
+Repository = "https://github.com/ysBach/sbppc"
+Issues = "https://github.com/ysBach/sbppc/issues"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+    "pytest-cov",
+]
+dev = [
+    "sbppc[test]",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

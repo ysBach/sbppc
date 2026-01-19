@@ -271,6 +271,18 @@ class TestXYMinimum:
         np.testing.assert_allclose(xmin, 7.0, rtol=RTOL, atol=ATOL)
         np.testing.assert_allclose(fmin, 0.0, rtol=RTOL, atol=ATOL)
 
+    def test_array_args_handled(self):
+        """Array arguments (like from minimize) handled correctly."""
+        def parabola(x, a, b):
+            return a * (x - b)**2
+
+        # Pass parameters as array, which mimics scipy.optimize behavior
+        theta_array = np.array([1.0, 5.0])
+        xmin, fmin = xy_minimum(parabola, theta_array, bracket=(0, 10))
+
+        np.testing.assert_allclose(xmin, 5.0, rtol=1e-3, atol=1e-3)
+        np.testing.assert_allclose(fmin, 0.0, rtol=1e-3, atol=1e-3)
+
 
 class TestPPCModel:
     """Test PPCModel class initialization and fitting."""

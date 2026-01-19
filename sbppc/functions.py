@@ -1,5 +1,14 @@
-"""
-All angles must be in degrees unit
+"""Small bodies polarimetric phase curve (PPC) fitting tools.
+
+This module provides various polarimetric phase curve models commonly used
+for small solar system bodies (asteroids, comets, etc.), including:
+
+- Linear-Exponential (LE)
+- Lumme-Muinonen (LM)
+- Shestopalov 3-parameter (SH3)
+- Shestopalov 5-parameter (SH5)
+
+All angles are in degrees and polarization values are in percent.
 """
 
 import numpy as np
@@ -16,6 +25,20 @@ __all__ = [
 
 
 class Param:
+    """A model parameter with bounds and default value.
+
+    Parameters
+    ----------
+    name : str
+        The parameter name.
+    low : float
+        The lower bound.
+    upp : float
+        The upper bound.
+    p0 : float
+        The default (initial) value.
+    """
+
     def __init__(self, name, low, upp, p0):
         self.name = str(name)
         self.low = low
@@ -85,14 +108,24 @@ _bounds_sh3 = (tuple([(p.low, p.upp) for p in _pars_sh3.values()]))
 ppc_pars = dict(lm_b=_pars_lm_b, lm_f=_pars_lm_f, le=_pars_le,
                 sh5=_pars_sh5, sh3=_pars_sh3)
 ppc_p0s = dict(lm_b=_p0_lm_b, lm_f=_p0_lm_f, le=_p0_le,
-               sh5=_p0_sh5, appsp=_p0_sh3, sgbip=_p0_sgbip)
+               sh5=_p0_sh5, sh3=_p0_sh3, sgbip=_p0_sgbip)
 ppc_bounds = dict(lm_b=_bounds_lm_b, lm_f=_bounds_lm_f, le=_bounds_le,
                   sh5=_bounds_sh5, sh3=_bounds_sh3)
 
 
-def cos(x): return np.cos(np.deg2rad(x))
-def sin(x): return np.sin(np.deg2rad(x))
-def tan(x): return np.tan(np.deg2rad(x))
+def cos(x):
+    """Cosine of angle in degrees."""
+    return np.cos(np.deg2rad(x))
+
+
+def sin(x):
+    """Sine of angle in degrees."""
+    return np.sin(np.deg2rad(x))
+
+
+def tan(x):
+    """Tangent of angle in degrees."""
+    return np.tan(np.deg2rad(x))
 
 
 def ppc_le(x, h=_pars_le["h"].p0, a0=_pars_le["a0"].p0, k=_pars_le["k"].p0):
@@ -123,7 +156,7 @@ def ppc_le(x, h=_pars_le["h"].p0, a0=_pars_le["a0"].p0, k=_pars_le["k"].p0):
 
 
 def alpha_min_le(h=None, a0=_pars_le["a0"].p0, k=_pars_le["k"].p0):
-    """ The minimum phase angle for the 3-parameter Linear-Exponential
+    """The minimum phase angle for the 3-parameter Linear-Exponential.
 
     Parameters
     ----------
@@ -135,6 +168,11 @@ def alpha_min_le(h=None, a0=_pars_le["a0"].p0, k=_pars_le["k"].p0):
     a0, k : float
         The inversion angle and the exponential coefficient in the units of
         deg and deg, respectively.
+
+    Returns
+    -------
+    alpha_min : float
+        The phase angle at which the minimum polarization occurs (degrees).
     """
     return -k*np.log(k/a0*(1 - np.exp(-a0/k)))
 
@@ -194,7 +232,7 @@ def ppc_sh5(x, h=_pars_sh5["h"].p0, a0=_pars_sh5["a0"].p0,
 
 
 def ppc_sh3(x, h=_pars_sh3["h"].p0, a0=_pars_sh3["a0"].p0, k1=_pars_sh3["k1"].p0):
-    """ The 3-parameter Shestopalov function
+    """The 3-parameter Shestopalov function.
 
     Parameters
     ----------
@@ -205,13 +243,13 @@ def ppc_sh3(x, h=_pars_sh3["h"].p0, a0=_pars_sh3["a0"].p0, k1=_pars_sh3["k1"].p0
         The slope parameter and the inversion angle in the units of %/deg
         and deg.
 
-    k : float
-        The first exponential coefficient in the units of deg.
+    k1 : float
+        The first exponential coefficient in the units of 1/deg.
 
     Returns
     -------
     Pr : array-like
-        The calculated polarization value in per-cent
+        The calculated polarization value in per-cent.
     """
     term1 = (1 - np.exp(-k1*x)) / (1 - np.exp(-k1*a0))
     term2 = (x - 180)/(a0-180)
@@ -222,6 +260,26 @@ _ppcs = {"le": ppc_le, "sh3": ppc_sh3, "sh5": ppc_sh5, "lm_b": ppc_lm, "lm_f": p
 
 
 def log_likelihood_simple(fun, x, y, yerr, theta):
+    """Compute log-likelihood assuming Gaussian errors.
+
+    Parameters
+    ----------
+    fun : callable
+        The model function.
+    x : array-like
+        Independent variable (phase angles).
+    y : array-like
+        Observed values (polarization).
+    yerr : array-like or None
+        Uncertainties on y. If None, assumes unit variance.
+    theta : tuple
+        Model parameters.
+
+    Returns
+    -------
+    ll : float
+        The log-likelihood value.
+    """
     model = fun(x, *theta)
     sigsq = 1 if yerr is None else yerr**2
     return -0.5*(np.sum((y-model)**2/sigsq))
@@ -261,8 +319,21 @@ def log_likelihood_simple(fun, x, y, yerr, theta):
 #             return -0.5*(np.sum((y-model)**2/sigsq) + np.sum(np.log(sigsq)))
 
 
-# Uniform distribution for (p1, p2) and ((lo1, hi1), (lo2, hi2)):
 def log_prior_uniform(theta, bounds):
+    """Uniform prior: 0 if theta within bounds, -inf otherwise.
+
+    Parameters
+    ----------
+    theta : array-like
+        Model parameters.
+    bounds : tuple of tuples
+        (lower_bounds, upper_bounds) for each parameter.
+
+    Returns
+    -------
+    lp : float
+        Log-prior probability (0.0 or -inf).
+    """
     if not (np.all(bounds[0] < theta) and np.all(theta < bounds[1])):
         return -np.inf
     else:
@@ -270,6 +341,24 @@ def log_prior_uniform(theta, bounds):
 
 
 def log_probability(x, y, yerr, theta, log_prior_fn, log_likelihood_fn):
+    """Compute log-posterior probability.
+
+    Parameters
+    ----------
+    x, y, yerr : array-like
+        Data arrays (phase angles, polarization, uncertainties).
+    theta : array-like
+        Model parameters.
+    log_prior_fn : callable
+        Function returning log-prior given theta.
+    log_likelihood_fn : callable
+        Function returning log-likelihood given (theta, x, y, yerr).
+
+    Returns
+    -------
+    lp : float
+        Log-posterior probability.
+    """
     lp = log_prior_fn(theta)
     if not np.isfinite(lp):
         return -np.inf
@@ -277,6 +366,26 @@ def log_probability(x, y, yerr, theta, log_prior_fn, log_likelihood_fn):
 
 
 def xy_minimum(fun, theta, xmin_fn=None, **kwargs):
+    """Find the x-value and function value at the minimum.
+
+    Parameters
+    ----------
+    fun : callable
+        Function to minimize, called as fun(x, *theta).
+    theta : tuple
+        Additional parameters passed to fun.
+    xmin_fn : callable or None
+        If provided, use this to compute xmin analytically.
+    **kwargs
+        Passed to scipy.optimize.minimize_scalar.
+
+    Returns
+    -------
+    xmin : float
+        The x-value at the minimum.
+    fmin : float
+        The function value at the minimum.
+    """
     if xmin_fn is None:
         mini = minimize_scalar(fun, args=theta, **kwargs)
         # Using bracket is a bit faster than using bounds.
@@ -290,12 +399,12 @@ class PPCModel:
     def __init__(self, fun, p0="default", log_likelihood_fn=None,
                  log_prior_fn=None, log_prob_fn=None,
                  bounds="default", amin_pmin_fn=None, amax_pmax_fn=None) -> None:
-        """ The PPCModel class
+        """Initialize a polarimetric phase curve model.
 
         Parameters
         ----------
         fun : str or callable
-            The model name or the model function. If str, it shoule be one of
+            The model name or function. If str, must be one of
             {"le", "sh3", "sh5", "lm_b", "lm_f"} for linear-exponential,
             Shestopalov 3-parameter, Shestopalov 5-parameter, Lumme-Muinonen
             3-parameter trigonometric function (power parameters bounded to
@@ -309,14 +418,20 @@ class PPCModel:
             any function with other kwargs to work properly. The model function
             MUST return the polarization value in per-cent.
 
-        log_prior_fn: callable
-            If given as a function, it must take only the model parameters as
-            input and return the log of the prior probability.
+        log_likelihood_fn : callable, optional
+            Custom log-likelihood function with signature (theta, x, y, yerr).
 
-        log_likelihood_fn: callable
-            If given as a function, it must first take the x, y, yerr and model
-            parameters as the following parameter (`theta`). It must return the
-            log of the likelihood probability.
+        log_prior_fn : callable, optional
+            Custom log-prior function with signature (theta,).
+
+        log_prob_fn : callable, optional
+            Custom log-posterior function with signature (theta, x, y, yerr).
+
+        amin_pmin_fn : callable, optional
+            Function to compute (alpha_min, P_min) given theta.
+
+        amax_pmax_fn : callable, optional
+            Function to compute (alpha_max, P_max) given theta.
         """
         if isinstance(fun, str):
             self.fun = _ppcs[fun]
@@ -335,6 +450,7 @@ class PPCModel:
                     raise ValueError("`p0` string is not understood.")
             else:
                 self.p0 = None if p0 is None else tuple(p0)
+
         else:  # `model` is a functional object
             self.fun = fun
             self.bounds = bounds
@@ -413,6 +529,33 @@ class PPCModel:
         self.nll = lambda *args: -self.log_likelihood_fn(*args)
 
     def solve_lsq(self, x, y, yerr=None, p0="default", bounds="default", **kwargs):
+        """Fit the model to data using least-squares minimization.
+
+        Parameters
+        ----------
+        x : array-like
+            Phase angles (degrees).
+        y : array-like
+            Observed polarization (percent).
+        yerr : array-like, optional
+            Uncertainties on y.
+        p0 : str or tuple, optional
+            Initial parameters. Use "default" for instance defaults.
+        bounds : str or tuple, optional
+            Parameter bounds. Use "default" for instance defaults.
+        **kwargs
+            Passed to scipy.optimize.minimize.
+
+        Returns
+        -------
+        theta_lsq : ndarray
+            Best-fit parameters.
+
+        Notes
+        -----
+        Also sets `self.theta_lsq`, `self.amin_lsq`, `self.pmin_lsq`,
+        `self.amax_lsq`, `self.pmax_lsq`.
+        """
         if p0 == "default":
             p0 = self.p0
         if bounds == "default":
@@ -426,4 +569,16 @@ class PPCModel:
         return self.theta_lsq
 
     def fun_lsq(self, xvals):
+        """Evaluate the fitted model at given phase angles.
+
+        Parameters
+        ----------
+        xvals : array-like
+            Phase angles (degrees).
+
+        Returns
+        -------
+        Pr : array-like
+            Predicted polarization (percent) using theta_lsq.
+        """
         return self.fun(xvals, *self.theta_lsq)

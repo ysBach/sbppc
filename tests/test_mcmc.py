@@ -57,10 +57,10 @@ class TestMCMC:
 
         derived = calc_derived_samples(model, samples)
 
-        assert "alpha_min" in derived
-        assert "p_min" in derived
-        assert len(derived["alpha_min"]) == nsamples
-        assert np.all(derived["alpha_min"] > 0)
+        assert "amin" in derived
+        assert "pmin" in derived
+        assert len(derived["amin"]) == nsamples
+        assert np.all(derived["amin"] > 0)
 
     def test_parallel_execution(self, synthetic_data):
         """Test parallel execution mode (mocking multiprocessing)."""

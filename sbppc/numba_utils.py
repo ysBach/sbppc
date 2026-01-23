@@ -20,7 +20,7 @@ def _get_jitted_model(func_name):
     # Create a namespace matching sbppc.functions but with JIT-ed helpers
     ns = vars(functions).copy()
 
-    ns["np"] = np # Ensure numpy is available
+    ns["np"] = np  # Ensure numpy is available
     ns["njit"] = njit
 
     # Clean up decorators if any? (PPC models usually don't have decorators)
@@ -31,6 +31,7 @@ def _get_jitted_model(func_name):
     py_func = ns[func_name]
     return njit(py_func)
 
+
 # Generate JIT-compiled models
 ppc_le_jit = _get_jitted_model("ppc_le")
 ppc_sh3_jit = _get_jitted_model("ppc_sh3")
@@ -39,26 +40,23 @@ ppc_lm_jit = _get_jitted_model("ppc_lm")
 
 # Map names to functions for dispatch
 # ID mapping: 0=le, 1=sh3, 2=lm, 3=sh5
-_FUNC_MAP = {
-    0: ppc_le_jit,
-    1: ppc_sh3_jit,
-    2: ppc_lm_jit,
-    3: ppc_sh5_jit
-}
+_FUNC_MAP = {0: ppc_le_jit, 1: ppc_sh3_jit, 2: ppc_lm_jit, 3: ppc_sh5_jit}
+
 
 @njit
 def _eval_func(func_id, x, theta):
     # Dispatcher manually expanded because Numba doesn't support dict[int, func] dispatch easily
     # in nopython mode for typical closures without overhead.
-    if func_id == 0: # LE
+    if func_id == 0:  # LE
         return ppc_le_jit(x, theta[0], theta[1], theta[2])
-    elif func_id == 1: # SH3
+    elif func_id == 1:  # SH3
         return ppc_sh3_jit(x, theta[0], theta[1], theta[2])
-    elif func_id == 2: # LM (b or f)
+    elif func_id == 2:  # LM (b or f)
         return ppc_lm_jit(x, theta[0], theta[1], theta[2], theta[3])
-    elif func_id == 3: # SH5
+    elif func_id == 3:  # SH5
         return ppc_sh5_jit(x, theta[0], theta[1], theta[2], theta[3], theta[4])
     return 0.0
+
 
 @njit
 def minimize_golden(func_id, theta, ax, bx, tol=1e-5, maxiter=50):
@@ -96,6 +94,7 @@ def minimize_golden(func_id, theta, ax, bx, tol=1e-5, maxiter=50):
     else:
         return x2, f2
 
+
 @njit
 def minimize_golden_max(func_id, theta, ax, bx, tol=1e-5, maxiter=50):
     """Golden Section Search for MAXIMUM (minimize negative)."""
@@ -127,9 +126,10 @@ def minimize_golden_max(func_id, theta, ax, bx, tol=1e-5, maxiter=50):
             f1 = -_eval_func(func_id, x1, theta)
 
     if f1 < f2:
-        return x1, f1 # Result of min(-f) -> f max
+        return x1, f1  # Result of min(-f) -> f max
     else:
         return x2, f2
+
 
 @njit
 def calculate_derived_numba(samples, func_id):
@@ -154,6 +154,6 @@ def calculate_derived_numba(samples, func_id):
         # Calculate max (assumed in 60-180)
         amax, neg_pmax = minimize_golden_max(func_id, theta, 60.0, 180.0)
         alpha_max[i] = amax
-        p_max[i] = -neg_pmax # Negate back
+        p_max[i] = -neg_pmax  # Negate back
 
     return alpha_min, p_min, alpha_max, p_max

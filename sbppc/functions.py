@@ -16,11 +16,18 @@ from scipy.optimize import minimize, minimize_scalar
 
 
 __all__ = [
-    "ppc_pars", "ppc_p0s", "ppc_bounds",
-    "ppc_le", "ppc_lm", "ppc_sh3", "ppc_sh5",
+    "ppc_pars",
+    "ppc_p0s",
+    "ppc_bounds",
+    "ppc_le",
+    "ppc_lm",
+    "ppc_sh3",
+    "ppc_sh5",
     "alpha_min_le",
-    "log_likelihood_simple", "log_prior_uniform", "xy_minimum",
-    "PPCModel"
+    "log_likelihood_simple",
+    "log_prior_uniform",
+    "xy_minimum",
+    "PPCModel",
 ]
 
 
@@ -52,44 +59,44 @@ class Param:
 
 
 _pars_lm_b = dict(
-    h=Param('h', 1.e-2, 1.e+1, 0.1),
-    a0=Param('a0', 10, 30, 20),
-    c1=Param('c1', 1.e-6, 1.e+1, 1),
-    c2=Param('c2', 1.e-6, 1.e+1, 1)
+    h=Param("h", 1.0e-2, 1.0e1, 0.1),
+    a0=Param("a0", 10, 30, 20),
+    c1=Param("c1", 1.0e-6, 1.0e1, 1),
+    c2=Param("c2", 1.0e-6, 1.0e1, 1),
 )
 
 _pars_lm_f = dict(
-    h=Param('h', 1.e-2, 1.e+1, 0.1),
-    a0=Param('a0', 10, 30, 20),
-    c1=Param('c1', -1.e+1, 1.e+1, 1),
-    c2=Param('c2', -1.e+1, 1.e+1, 1)
+    h=Param("h", 1.0e-2, 1.0e1, 0.1),
+    a0=Param("a0", 10, 30, 20),
+    c1=Param("c1", -1.0e1, 1.0e1, 1),
+    c2=Param("c2", -1.0e1, 1.0e1, 1),
 )
 
 _pars_le = dict(
-    h=Param('h', 1.e-2, 1.e+1, 0.1),
-    a0=Param('a0', 10, 30, 20),
-    k=Param("k", 1.e-5, 100, 10.)
+    h=Param("h", 1.0e-2, 1.0e1, 0.1),
+    a0=Param("a0", 10, 30, 20),
+    k=Param("k", 1.0e-5, 100, 10.0),
 )
 
 _pars_sh5 = dict(
-    h=Param('h', 1.e-2, 1.e+1, 0.1),
-    a0=Param('a0', 10, 30, 20),
-    k1=Param('k1', -1., 1., 0.1),
-    k2=Param('k2', -10., 10., 1.e-5),
-    k0=Param('k0', -10., 10., 1.e-5)
+    h=Param("h", 1.0e-2, 1.0e1, 0.1),
+    a0=Param("a0", 10, 30, 20),
+    k1=Param("k1", -1.0, 1.0, 0.1),
+    k2=Param("k2", -10.0, 10.0, 1.0e-5),
+    k0=Param("k0", -10.0, 10.0, 1.0e-5),
 )
 
 _pars_sh3 = dict(
-    h=Param('h', 1.e-2, 1.e+1, 0.1),
-    a0=Param('a0', 10, 30, 20),
-    k1=Param('k1', -1, 1., 0.001)
+    h=Param("h", 1.0e-2, 1.0e1, 0.1),
+    a0=Param("a0", 10, 30, 20),
+    k1=Param("k1", -1, 1.0, 0.001),
 )
 
 _pars_sgbip = dict(
-    h=Param('h', 1.e-2, 1.e+1, 0.1),
-    a0=Param('a0', 10, 30, 20),
-    kn=Param('kn', -1., 1., 0.001),
-    kp=Param('kp', 1.e-8, 1., 0.001)
+    h=Param("h", 1.0e-2, 1.0e1, 0.1),
+    a0=Param("a0", 10, 30, 20),
+    kn=Param("kn", -1.0, 1.0, 0.001),
+    kp=Param("kp", 1.0e-8, 1.0, 0.001),
 )
 
 _p0_lm_b = tuple([p.p0 for p in _pars_lm_b.values()])
@@ -99,25 +106,29 @@ _p0_sh5 = tuple([p.p0 for p in _pars_sh5.values()])
 _p0_sh3 = tuple([p.p0 for p in _pars_sh3.values()])
 _p0_sgbip = tuple([p.p0 for p in _pars_sgbip.values()])
 
-_bounds_lm_b = (tuple([(p.low, p.upp) for p in _pars_lm_b.values()]))
-_bounds_lm_f = (tuple([(p.low, p.upp) for p in _pars_lm_f.values()]))
-_bounds_le = (tuple([(p.low, p.upp) for p in _pars_le.values()]))
-_bounds_sh5 = (tuple([(p.low, p.upp) for p in _pars_sh5.values()]))
-_bounds_sh3 = (tuple([(p.low, p.upp) for p in _pars_sh3.values()]))
+_bounds_lm_b = tuple([(p.low, p.upp) for p in _pars_lm_b.values()])
+_bounds_lm_f = tuple([(p.low, p.upp) for p in _pars_lm_f.values()])
+_bounds_le = tuple([(p.low, p.upp) for p in _pars_le.values()])
+_bounds_sh5 = tuple([(p.low, p.upp) for p in _pars_sh5.values()])
+_bounds_sh3 = tuple([(p.low, p.upp) for p in _pars_sh3.values()])
 
-ppc_pars = dict(lm_b=_pars_lm_b, lm_f=_pars_lm_f, le=_pars_le,
-                sh5=_pars_sh5, sh3=_pars_sh3)
-ppc_p0s = dict(lm_b=_p0_lm_b, lm_f=_p0_lm_f, le=_p0_le,
-               sh5=_p0_sh5, sh3=_p0_sh3, sgbip=_p0_sgbip)
-ppc_bounds = dict(lm_b=_bounds_lm_b, lm_f=_bounds_lm_f, le=_bounds_le,
-                  sh5=_bounds_sh5, sh3=_bounds_sh3)
-
-
-
+ppc_pars = dict(
+    lm_b=_pars_lm_b, lm_f=_pars_lm_f, le=_pars_le, sh5=_pars_sh5, sh3=_pars_sh3
+)
+ppc_p0s = dict(
+    lm_b=_p0_lm_b, lm_f=_p0_lm_f, le=_p0_le, sh5=_p0_sh5, sh3=_p0_sh3, sgbip=_p0_sgbip
+)
+ppc_bounds = dict(
+    lm_b=_bounds_lm_b,
+    lm_f=_bounds_lm_f,
+    le=_bounds_le,
+    sh5=_bounds_sh5,
+    sh3=_bounds_sh3,
+)
 
 
 def ppc_le(x, h=_pars_le["h"].p0, a0=_pars_le["a0"].p0, k=_pars_le["k"].p0):
-    """ The 3-parameter Linear-Exponential function
+    """The 3-parameter Linear-Exponential function
 
     Parameters
     ----------
@@ -136,11 +147,11 @@ def ppc_le(x, h=_pars_le["h"].p0, a0=_pars_le["a0"].p0, k=_pars_le["k"].p0):
     Pr : array-like
         The calculated polarization value in per-cent
     """
-    e0 = np.exp(-a0/k)
+    e0 = np.exp(-a0 / k)
     # numer = a0*(np.exp(-a*x) + a*np.exp(-a*a0)*x - 1)
-    numer = (1 - e0)*x - (1 - np.exp(-x/k))*a0
-    denom = 1 - (1 + a0/k)*e0
-    return h*(numer/denom)
+    numer = (1 - e0) * x - (1 - np.exp(-x / k)) * a0
+    denom = 1 - (1 + a0 / k) * e0
+    return h * (numer / denom)
 
 
 def alpha_min_le(h=None, a0=_pars_le["a0"].p0, k=_pars_le["k"].p0):
@@ -162,12 +173,17 @@ def alpha_min_le(h=None, a0=_pars_le["a0"].p0, k=_pars_le["k"].p0):
     alpha_min : float
         The phase angle at which the minimum polarization occurs (degrees).
     """
-    return -k*np.log(k/a0*(1 - np.exp(-a0/k)))
+    return -k * np.log(k / a0 * (1 - np.exp(-a0 / k)))
 
 
-def ppc_lm(x, h=_pars_lm_b["h"].p0, a0=_pars_lm_b["a0"].p0,
-           c1=_pars_lm_b["c1"].p0, c2=_pars_lm_b["c2"].p0):
-    """ The 4-parameter Lumme-Muinonen function
+def ppc_lm(
+    x,
+    h=_pars_lm_b["h"].p0,
+    a0=_pars_lm_b["a0"].p0,
+    c1=_pars_lm_b["c1"].p0,
+    c2=_pars_lm_b["c2"].p0,
+):
+    """The 4-parameter Lumme-Muinonen function
 
     Parameters
     ----------
@@ -188,18 +204,24 @@ def ppc_lm(x, h=_pars_lm_b["h"].p0, a0=_pars_lm_b["a0"].p0,
     """
     sx = np.sin(np.deg2rad(x))
     sa0 = np.sin(np.deg2rad(a0))
-    cx2 = np.cos(np.deg2rad(x/2))
-    ca02 = np.cos(np.deg2rad(a0/2))
+    cx2 = np.cos(np.deg2rad(x / 2))
+    ca02 = np.cos(np.deg2rad(a0 / 2))
     sxma0 = np.sin(np.deg2rad(x - a0))
 
-    term1 = (sx / sa0)**c1
-    term2 = (cx2 / ca02)**c2
+    term1 = (sx / sa0) ** c1
+    term2 = (cx2 / ca02) ** c2
     return h * term1 * term2 * sxma0
 
 
-def ppc_sh5(x, h=_pars_sh5["h"].p0, a0=_pars_sh5["a0"].p0,
-            k1=_pars_sh5["k1"].p0, k2=_pars_sh5["k2"].p0, k0=_pars_sh5["k0"].p0):
-    """ The 5-parameter Shestopalov function
+def ppc_sh5(
+    x,
+    h=_pars_sh5["h"].p0,
+    a0=_pars_sh5["a0"].p0,
+    k1=_pars_sh5["k1"].p0,
+    k2=_pars_sh5["k2"].p0,
+    k0=_pars_sh5["k0"].p0,
+):
+    """The 5-parameter Shestopalov function
 
     Parameters
     ----------
@@ -218,9 +240,9 @@ def ppc_sh5(x, h=_pars_sh5["h"].p0, a0=_pars_sh5["a0"].p0,
     Pr : array-like
         The calculated polarization value in per-cent
     """
-    term1 = (1 - np.exp(-k1*x)) / (1 - np.exp(-k1*a0))
-    term2 = (1 - np.exp(-k0*(x - a0))) / k0
-    term3 = (1 - np.exp(-k2*(x - 180))) / (1 - np.exp(-k2*(a0 - 180)))
+    term1 = (1 - np.exp(-k1 * x)) / (1 - np.exp(-k1 * a0))
+    term2 = (1 - np.exp(-k0 * (x - a0))) / k0
+    term3 = (1 - np.exp(-k2 * (x - 180))) / (1 - np.exp(-k2 * (a0 - 180)))
     return h * term1 * term2 * term3
 
 
@@ -244,9 +266,9 @@ def ppc_sh3(x, h=_pars_sh3["h"].p0, a0=_pars_sh3["a0"].p0, k1=_pars_sh3["k1"].p0
     Pr : array-like
         The calculated polarization value in per-cent.
     """
-    term1 = (1 - np.exp(-k1*x)) / (1 - np.exp(-k1*a0))
-    term2 = (x - 180)/(a0-180)
-    return h*(x-a0)*term1*term2
+    term1 = (1 - np.exp(-k1 * x)) / (1 - np.exp(-k1 * a0))
+    term2 = (x - 180) / (a0 - 180)
+    return h * (x - a0) * term1 * term2
 
 
 _ppcs = {"le": ppc_le, "sh3": ppc_sh3, "sh5": ppc_sh5, "lm_b": ppc_lm, "lm_f": ppc_lm}
@@ -275,7 +297,7 @@ def log_likelihood_simple(fun, x, y, yerr, theta):
     """
     model = fun(x, *theta)
     sigsq = 1 if yerr is None else yerr**2
-    return -0.5*(np.sum((y-model)**2/sigsq))
+    return -0.5 * (np.sum((y - model) ** 2 / sigsq))
 
 
 # def log_likelihood_const(fun, x, y, yerr, theta):
@@ -389,9 +411,17 @@ def xy_minimum(fun, theta, xmin_fn=None, **kwargs):
 
 
 class PPCModel:
-    def __init__(self, fun, p0="default", log_likelihood_fn=None,
-                 log_prior_fn=None, log_prob_fn=None,
-                 bounds="default", amin_pmin_fn=None, amax_pmax_fn=None) -> None:
+    def __init__(
+        self,
+        fun,
+        p0="default",
+        log_likelihood_fn=None,
+        log_prior_fn=None,
+        log_prob_fn=None,
+        bounds="default",
+        amin_pmin_fn=None,
+        amax_pmax_fn=None,
+    ) -> None:
         """Initialize a polarimetric phase curve model.
 
         Parameters
@@ -459,6 +489,7 @@ class PPCModel:
         else:
             # For custom functions, extract from signature
             import inspect
+
             sig = inspect.signature(self.fun)
             self.par_names = list(sig.parameters.keys())[1:]  # Skip 'x'
 
@@ -484,8 +515,10 @@ class PPCModel:
                 self.bounds_lohi = None
                 self.log_prior_fn = self._prior_flat
             else:
-                self.bounds_lohi = (tuple([b[0] for b in self.bounds]),
-                                    tuple([b[1] for b in self.bounds]))
+                self.bounds_lohi = (
+                    tuple([b[0] for b in self.bounds]),
+                    tuple([b[1] for b in self.bounds]),
+                )
                 # ^^^ same as bounds but for easy use for some APIs...
                 self.log_prior_fn = self._default_log_prior
         else:
@@ -511,22 +544,30 @@ class PPCModel:
         """Default calculation of minimum polarization."""
         xmin_fn = None
         if getattr(self.fun, "__name__", "") == "ppc_le":
-             xmin_fn = alpha_min_le
+            xmin_fn = alpha_min_le
 
         return xy_minimum(
-            self.fun, theta, bounds=(0, 180), method="bounded", tol=0.001,
-            xmin_fn=xmin_fn
+            self.fun,
+            theta,
+            bounds=(0, 180),
+            method="bounded",
+            tol=0.001,
+            xmin_fn=xmin_fn,
         )
 
     def _default_amax_pmax(self, theta):
         """Default calculation of maximum polarization."""
         xmin_fn = None
         if getattr(self.fun, "__name__", "") == "ppc_le":
-             xmin_fn = lambda *args: 180
+            xmin_fn = lambda *args: 180
 
         return xy_minimum(
-            self._neg_fun_eval, theta, bounds=(60, 180), method="bounded", tol=0.001,
-            xmin_fn=xmin_fn
+            self._neg_fun_eval,
+            theta,
+            bounds=(60, 180),
+            method="bounded",
+            tol=0.001,
+            xmin_fn=xmin_fn,
         ) * np.array([1, -1])
 
     def _neg_fun_eval(self, *args):
@@ -544,9 +585,12 @@ class PPCModel:
     def _default_log_prob(self, theta, x, y, yerr):
         """Default log-probability function."""
         return log_probability(
-            x, y, yerr, theta, self.log_prior_fn, self.log_likelihood_fn)
+            x, y, yerr, theta, self.log_prior_fn, self.log_likelihood_fn
+        )
 
-    def solve_lsq(self, x, y, yerr=None, p0="default", bounds="default", calc_stats=True, **kwargs):
+    def solve_lsq(
+        self, x, y, yerr=None, p0="default", bounds="default", calc_stats=True, **kwargs
+    ):
         """Fit the model to data using least-squares minimization.
 
         Parameters
@@ -602,7 +646,7 @@ class PPCModel:
                 # Standard practice with None is usually sigma=1.
                 self.chi2_lsq = np.sum(resid**2)
             else:
-                self.chi2_lsq = np.sum((resid / yerr)**2)
+                self.chi2_lsq = np.sum((resid / yerr) ** 2)
 
             n_data = len(x)
             self.chi2_red_lsq = self.chi2_lsq / (n_data - self.npars)

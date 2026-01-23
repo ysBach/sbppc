@@ -7,11 +7,28 @@ import numpy as np
 import emcee
 import corner
 
-__all__ = ["trace_plot", "run_emcee", "calc_derived_samples", "corner_plot", "summarize_samples"]
+__all__ = [
+    "trace_plot",
+    "run_emcee",
+    "calc_derived_samples",
+    "corner_plot",
+    "summarize_samples",
+]
 
 
-def run_emcee(model, x, y, yerr=None, p0=None, nwalkers=32, nsteps=2000,
-              burnin=500, parallel=True, progress=True, **kwargs):
+def run_emcee(
+    model,
+    x,
+    y,
+    yerr=None,
+    p0=None,
+    nwalkers=32,
+    nsteps=2000,
+    burnin=500,
+    parallel=True,
+    progress=True,
+    **kwargs,
+):
     """Run MCMC sampling using emcee.
 
     Parameters
@@ -47,7 +64,7 @@ def run_emcee(model, x, y, yerr=None, p0=None, nwalkers=32, nsteps=2000,
     """
     # 1. Setup initial position
     if p0 is None:
-        if not hasattr(model, 'theta_lsq'):
+        if not hasattr(model, "theta_lsq"):
             model.solve_lsq(x, y, yerr=yerr)
         p0_center = model.theta_lsq
     else:
@@ -60,8 +77,12 @@ def run_emcee(model, x, y, yerr=None, p0=None, nwalkers=32, nsteps=2000,
     # 2. Run MCMC
     def _run_sampler(pool_obj=None):
         sampler_obj = emcee.EnsembleSampler(
-            nwalkers, ndim, model.log_prob_fn, args=(x, y, yerr), pool=pool_obj,
-            **kwargs
+            nwalkers,
+            ndim,
+            model.log_prob_fn,
+            args=(x, y, yerr),
+            pool=pool_obj,
+            **kwargs,
         )
 
         # Burn-in
@@ -85,12 +106,13 @@ def run_emcee(model, x, y, yerr=None, p0=None, nwalkers=32, nsteps=2000,
     return sampler
 
 
-
 try:
     from sbppc.numba_utils import calculate_derived_numba
+
     HAS_NUMBA = True
 except ImportError:
     HAS_NUMBA = False
+
 
 def calc_derived_samples(model, samples):
     """Calculate derived parameters (Pmin, αmin, Pmax, αmax) from samples.
@@ -164,8 +186,9 @@ def calc_derived_samples(model, samples):
     }
 
 
-def summarize_samples(model, flat_samples, percentiles=(16, 50, 84),
-                      include_max=False, dropna=True):
+def summarize_samples(
+    model, flat_samples, percentiles=(16, 50, 84), include_max=False, dropna=True
+):
     """Calculate derived parameters, stack with samples, and compute percentiles.
 
     Parameters
@@ -195,7 +218,9 @@ def summarize_samples(model, flat_samples, percentiles=(16, 50, 84),
 
     # Build stacked samples and labels
     samples_list = [flat_samples, derived["amin"][:, None], derived["pmin"][:, None]]
-    labels = list(getattr(model, 'par_names', [f'p{i}' for i in range(flat_samples.shape[1])]))
+    labels = list(
+        getattr(model, "par_names", [f"p{i}" for i in range(flat_samples.shape[1])])
+    )
     labels.extend(["amin", "pmin"])
 
     if include_max:

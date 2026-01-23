@@ -551,7 +551,7 @@ class PPCModel:
             theta,
             bounds=(0, 180),
             method="bounded",
-            tol=0.001,
+            options={"xatol": 0.001},
             xmin_fn=xmin_fn,
         )
 
@@ -566,7 +566,7 @@ class PPCModel:
             theta,
             bounds=(60, 180),
             method="bounded",
-            tol=0.001,
+            options={"xatol": 0.001},
             xmin_fn=xmin_fn,
         ) * np.array([1, -1])
 

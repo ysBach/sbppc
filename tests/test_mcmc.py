@@ -35,7 +35,7 @@ class TestMCMC:
             parallel=False, progress=False
         )
 
-        assert sampler.chain.shape == (16, 200, 3)
+        assert sampler.get_chain().shape == (200, 16, 3)
 
         # Check if median of chains is reasonable
         flat_samples = sampler.get_chain(discard=100, flat=True)
@@ -73,4 +73,4 @@ class TestMCMC:
             nwalkers=10, nsteps=10, burnin=0,
             parallel=True, progress=False
         )
-        assert sampler.chain.shape == (10, 10, 3)
+        assert sampler.get_chain().shape == (10, 10, 3)

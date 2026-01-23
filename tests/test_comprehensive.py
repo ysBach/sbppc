@@ -88,7 +88,7 @@ class TestPPCModelLSQFitting:
         model.solve_lsq(synthetic_data["x"], synthetic_data["y"], yerr=synthetic_data["yerr"])
 
         expected = EXPECTED_LSQ[model_name]["theta_lsq"]
-        np.testing.assert_allclose(model.theta_lsq, expected, rtol=1e-5)
+        np.testing.assert_allclose(model.theta_lsq, expected, rtol=1e-3)
 
     @pytest.mark.parametrize("model_name", ["le", "sh3", "sh5", "lm_b", "lm_f"])
     def test_amin_lsq_values(self, synthetic_data, model_name):

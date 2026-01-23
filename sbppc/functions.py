@@ -396,7 +396,7 @@ class PPCModel:
 
         Parameters
         ----------
-        fun : str or callable
+        fun : {"le", "sh3", "sh5", "lm_b", "lm_f"} or callable
             The model name or function. If str, must be one of
             {"le", "sh3", "sh5", "lm_b", "lm_f"} for linear-exponential,
             Shestopalov 3-parameter, Shestopalov 5-parameter, Lumme-Muinonen
@@ -452,6 +452,15 @@ class PPCModel:
             self.p0 = p0
 
         self.npars = self.fun.__code__.co_argcount - 1
+
+        # Set parameter names
+        if isinstance(fun, str) and fun in ppc_pars:
+            self.par_names = list(ppc_pars[fun].keys())
+        else:
+            # For custom functions, extract from signature
+            import inspect
+            sig = inspect.signature(self.fun)
+            self.par_names = list(sig.parameters.keys())[1:]  # Skip 'x'
 
         if amin_pmin_fn is None:
             self.amin_pmin_fn = self._default_amin_pmin

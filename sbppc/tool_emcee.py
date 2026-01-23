@@ -7,7 +7,7 @@ import numpy as np
 import emcee
 import corner
 
-__all__ = ["trace_plot", "run_emcee", "calc_derived_samples", "corner_plot"]
+__all__ = ["trace_plot", "run_emcee", "calc_derived_samples", "corner_plot", "summarize_samples"]
 
 
 def run_emcee(model, x, y, yerr=None, p0=None, nwalkers=32, nsteps=2000,
@@ -93,7 +93,7 @@ except ImportError:
     HAS_NUMBA = False
 
 def calc_derived_samples(model, samples):
-    """Calculate derived parameters (Pmin, alpha_min, Pmax, alpha_max) from samples.
+    """Calculate derived parameters (Pmin, αmin, Pmax, αmax) from samples.
 
     Parameters
     ----------
@@ -106,10 +106,10 @@ def calc_derived_samples(model, samples):
     -------
     derived : dict of ndarray
         Dictionary containing samples for:
-        - 'alpha_min': Phase angle of minimum polarization
-        - 'p_min': Minimum polarization value
-        - 'alpha_max': Phase angle of maximum polarization
-        - 'p_max': Maximum polarization value
+        - 'amin': Phase angle of minimum polarization
+        - 'pmin': Minimum polarization value
+        - 'amax': Phase angle of maximum polarization
+        - 'pmax': Maximum polarization value
     """
     # Numba optimization path
     func_id = -1
@@ -131,18 +131,18 @@ def calc_derived_samples(model, samples):
         amin, pmin, amax, pmax = calculate_derived_numba(samples, func_id)
 
         return {
-            "alpha_min": amin,
-            "p_min": pmin,
-            "alpha_max": amax,
-            "p_max": pmax,
+            "amin": amin,
+            "pmin": pmin,
+            "amax": amax,
+            "pmax": pmax,
         }
 
     # Fallback to Python loop
     nsamples = len(samples)
-    alpha_min = np.zeros(nsamples)
-    p_min = np.zeros(nsamples)
-    alpha_max = np.zeros(nsamples)
-    p_max = np.zeros(nsamples)
+    amin = np.zeros(nsamples)
+    pmin = np.zeros(nsamples)
+    amax = np.zeros(nsamples)
+    pmax = np.zeros(nsamples)
 
     for i in range(nsamples):
         theta = samples[i]
@@ -151,16 +151,92 @@ def calc_derived_samples(model, samples):
         # model.amax_pmax_fn returns (amax, pmax)
         amax, pmax = model.amax_pmax_fn(theta)
 
-        alpha_min[i] = amin
-        p_min[i] = pmin
-        alpha_max[i] = amax
-        p_max[i] = pmax
+        amin[i] = amin
+        pmin[i] = pmin
+        amax[i] = amax
+        pmax[i] = pmax
 
     return {
-        "alpha_min": alpha_min,
-        "p_min": p_min,
-        "alpha_max": alpha_max,
-        "p_max": p_max,
+        "amin": amin,
+        "pmin": pmin,
+        "amax": amax,
+        "pmax": pmax,
+    }
+
+
+def summarize_samples(model, flat_samples, percentiles=(16, 50, 84),
+                      include_max=False, dropna=True):
+    """Calculate derived parameters, stack with samples, and compute percentiles.
+
+    Parameters
+    ----------
+    model : PPCModel
+        The model instance used for MCMC.
+    flat_samples : ndarray
+        Flattened MCMC samples of shape (nsamples, npars).
+    percentiles : tuple of float, optional
+        Percentiles to compute. Default (16, 50, 84).
+    include_max : bool, optional
+        If True, include amax and pmax in output. Default False.
+    dropna : bool, optional
+        If True, drop samples where any derived parameter is NaN. Default True.
+
+    Returns
+    -------
+    result : dict
+        Dictionary containing:
+        - 'samples': ndarray of stacked samples (nsamples, npars + n_derived)
+        - 'labels': list of parameter labels
+        - 'percentiles': dict mapping label -> array of percentile values
+        - 'lsq': dict of LSQ values if available (or None)
+    """
+    # Calculate derived parameters
+    derived = calc_derived_samples(model, flat_samples)
+
+    # Build stacked samples and labels
+    samples_list = [flat_samples, derived["amin"][:, None], derived["pmin"][:, None]]
+    labels = list(getattr(model, 'par_names', [f'p{i}' for i in range(flat_samples.shape[1])]))
+    labels.extend(["amin", "pmin"])
+
+    if include_max:
+        samples_list.extend([derived["amax"][:, None], derived["pmax"][:, None]])
+        labels.extend(["amax", "pmax"])
+
+    samples_all = np.hstack(samples_list)
+
+    # Drop NaN rows if requested
+    if dropna:
+        mask = ~np.isnan(samples_all).any(axis=1)
+        samples_all = samples_all[mask]
+
+    # Calculate percentiles
+    pct_values = np.percentile(samples_all, percentiles, axis=0)
+    pct_dict = {}
+    for i, label in enumerate(labels):
+        pct_dict[label] = {p: pct_values[j, i] for j, p in enumerate(percentiles)}
+
+    # Get LSQ values if available
+    # lsq = None
+    # if hasattr(model, "theta_lsq"):
+    #     lsq = {
+    #         label: val for label, val in
+    #         zip(labels[:flat_samples.shape[1]], model.theta_lsq)
+    #     }
+    #     if hasattr(model, "amin_lsq"):
+    #         lsq["amin"] = model.amin_lsq
+    #     if hasattr(model, "pmin_lsq"):
+    #         lsq["pmin"] = model.pmin_lsq
+    #     if include_max:
+    #         if hasattr(model, "amax_lsq"):
+    #             lsq["amax"] = model.amax_lsq
+    #         if hasattr(model, "pmax_lsq"):
+    #             lsq["pmax"] = model.pmax_lsq
+
+    return {
+        "samples": samples_all,
+        "labels": labels,
+        "percentiles": pct_dict,
+        # "lsq": lsq,
     }
 
 
